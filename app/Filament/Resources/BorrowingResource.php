@@ -34,7 +34,7 @@ class BorrowingResource extends Resource
                         ->default(fn () => 'PMJ-' . strtoupper(Str::random(8)))
                         ->required()
                         ->unique(ignoreRecord: true)
-                        ->disabled()
+                        
                         ->maxLength(50),
 
                     Forms\Components\Select::make('user_id')

@@ -2,17 +2,23 @@
 
 namespace App\Filament\Resources\MonthlyReportResource\Widgets;
 
-use App\Models\Borrowing;
+use App\Filament\Resources\MonthlyReportResource\Pages\ListMonthlyReports;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\Concerns\InteractsWithPageTable;
 
 class MonthlyReportStats extends BaseWidget
 {
+    use InteractsWithPageTable;
+
+    protected function getTablePage(): string
+    {
+        return ListMonthlyReports::class;
+    }
+
     protected function getStats(): array
     {
-        $baseQuery = Borrowing::query();
-        $baseQuery = $this->applyTableFilters($baseQuery);
+        $baseQuery = $this->getPageTableQuery();
 
         $totalPinjaman = (clone $baseQuery)->count();
         $totalTerlambat = (clone $baseQuery)->where('status', 'terlambat')->count();
@@ -31,19 +37,5 @@ class MonthlyReportStats extends BaseWidget
                 ->description('Akumulasi denda pada filter aktif')
                 ->color('warning'),
         ];
-    }
-
-    private function applyTableFilters(Builder $query): Builder
-    {
-        $filters = request()->input('tableFilters', []);
-
-        $status = $filters['status']['value'] ?? null;
-        $bulan = $filters['bulan_tahun']['bulan'] ?? now()->month;
-        $tahun = $filters['bulan_tahun']['tahun'] ?? now()->year;
-
-        return $query
-            ->when(filled($status), fn (Builder $query): Builder => $query->where('status', $status))
-            ->when(filled($bulan), fn (Builder $query): Builder => $query->whereMonth('tanggal_pinjam', (int) $bulan))
-            ->when(filled($tahun), fn (Builder $query): Builder => $query->whereYear('tanggal_pinjam', (int) $tahun));
     }
 }
